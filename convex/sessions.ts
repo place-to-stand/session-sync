@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { Doc, Id } from "./_generated/dataModel";
 
 /**
  * List all non-archived sessions (or optionally include archived).
@@ -67,9 +66,14 @@ export const checkoutSession = mutation({
       );
     }
 
+    // Idempotent: if this machine already holds the checkout, return success
+    if (session.checkedOutBy === args.machineId) {
+      return { success: true, checkedOutAt: session.checkedOutAt! };
+    }
+
     // Atomic compare-and-swap: only check out if nobody else has it
     if (session.checkedOutBy !== undefined) {
-      // Someone already has it checked out — find out who for a useful error
+      // Someone else has it checked out — find out who for a useful error
       const holder = await ctx.db.get(session.checkedOutBy);
       const holderName = holder?.displayName ?? "unknown machine";
       throw new Error(

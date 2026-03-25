@@ -3,7 +3,6 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { api } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
 import {
   S3Client,
   PutObjectCommand,
@@ -16,6 +15,30 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /** Presigned URL expiry: 1 hour (in seconds). */
 const PRESIGN_EXPIRY_SECONDS = 3600;
+
+/**
+ * Validate that an R2 key matches one of the allowed patterns.
+ * Prevents clients from requesting presigned URLs for arbitrary bucket paths.
+ *
+ * Allowed formats:
+ *  - _objects/{blake3hash}         (content-addressed, 64 hex chars)
+ *  - _objects/{blake3hash}.ext     (content-addressed with extension)
+ *  - _versions/{uuid}/v{N}/manifest.json  (version manifests)
+ */
+const R2_KEY_PATTERNS = [
+  /^_objects\/[a-f0-9]{64}(\.\w+)?$/,
+  /^_versions\/[a-f0-9-]{36}\/v\d+\/manifest\.json$/,
+];
+
+function validateR2Key(r2Key: string): void {
+  const isValid = R2_KEY_PATTERNS.some((pattern) => pattern.test(r2Key));
+  if (!isValid) {
+    throw new Error(
+      `Invalid R2 key format: "${r2Key}". ` +
+        `Keys must match _objects/{blake3hash}[.ext] or _versions/{uuid}/v{N}/manifest.json`
+    );
+  }
+}
 
 /**
  * Build an S3-compatible client pointed at the Cloudflare R2 endpoint.
@@ -68,6 +91,8 @@ export const requestUploadUrl = action({
     contentLength: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    validateR2Key(args.r2Key);
+
     // Validate the machine holds the checkout for this session
     const session = await ctx.runQuery(api.sessions.getSession, {
       sessionId: args.sessionId,
@@ -128,6 +153,8 @@ export const requestDownloadUrl = action({
     r2Key: v.string(), // Full R2 object key
   },
   handler: async (ctx, args) => {
+    validateR2Key(args.r2Key);
+
     // Verify the machine is registered (any registered machine can download)
     const machine = await ctx.runQuery(api.machines.getMachine, {
       machineId: args.machineId,
@@ -180,6 +207,8 @@ export const requestMultipartPresignedUrls = action({
     contentType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    validateR2Key(args.r2Key);
+
     if (args.numParts < 1 || args.numParts > 10000) {
       throw new Error(
         `numParts must be between 1 and 10000 (got ${args.numParts})`
@@ -273,6 +302,8 @@ export const completeMultipartUpload = action({
     ),
   },
   handler: async (ctx, args) => {
+    validateR2Key(args.r2Key);
+
     // Validate checkout ownership
     const session = await ctx.runQuery(api.sessions.getSession, {
       sessionId: args.sessionId,
@@ -331,6 +362,11 @@ export const requestBatchDownloadUrls = action({
       throw new Error(
         `Too many keys in batch request (${args.r2Keys.length}). Maximum is 1000.`
       );
+    }
+
+    // Validate all keys before proceeding
+    for (const key of args.r2Keys) {
+      validateR2Key(key);
     }
 
     // Verify the machine is registered

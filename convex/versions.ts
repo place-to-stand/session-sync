@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { Doc, Id } from "./_generated/dataModel";
 
 /**
  * Create a new version snapshot for a session. Only the machine that
@@ -110,17 +109,15 @@ export const getLatestRelease = query({
     sessionId: v.id("sessions"),
   },
   handler: async (ctx, args) => {
-    // Get all versions for this session in descending order
-    const versions = await ctx.db
+    // Use the composite index to query only release versions, newest first
+    const latestRelease = await ctx.db
       .query("versions")
-      .withIndex("by_session_version", (q) =>
-        q.eq("sessionId", args.sessionId)
+      .withIndex("by_session_release_version", (q) =>
+        q.eq("sessionId", args.sessionId).eq("isRelease", true)
       )
       .order("desc")
-      .collect();
+      .first();
 
-    // Find the first (most recent) release version
-    const latestRelease = versions.find((v) => v.isRelease);
     return latestRelease ?? null;
   },
 });

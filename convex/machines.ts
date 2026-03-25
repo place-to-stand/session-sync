@@ -1,13 +1,9 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
-import { Doc, Id } from "./_generated/dataModel";
-import { internal } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 
 /** How long (ms) before a heartbeat is considered stale: 30 minutes. */
 const STALE_THRESHOLD_MS = 30 * 60 * 1000;
-
-/** How often (ms) the stale detection cron should run: every 5 minutes. */
-const STALE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 /**
  * Register a new machine for a user. If a machine with the same machineId
@@ -107,15 +103,6 @@ export const heartbeat = mutation({
         updatedAt: now,
       });
     }
-
-    // Schedule stale detection to run in 5 minutes.
-    // Multiple heartbeats may schedule overlapping checks — that's fine,
-    // detectStaleSessions is idempotent.
-    await ctx.scheduler.runAfter(
-      STALE_CHECK_INTERVAL_MS,
-      internal.machines.detectStaleSessions,
-      {}
-    );
 
     return { success: true, heartbeatAt: now };
   },

@@ -28,7 +28,7 @@ export default defineSchema({
   sessions: defineTable({
     name: v.string(), // Human-friendly: "Rivera Album"
     r2Prefix: v.string(), // "sessions/{uuid}" — immutable after creation
-    checkedOutBy: v.optional(v.id("machines")), // null when available
+    checkedOutBy: v.optional(v.id("machines")), // undefined when available
     checkedOutAt: v.optional(v.number()),
     lastHeartbeatAt: v.optional(v.number()), // From the machine holding checkout
     status: v.union(
@@ -67,7 +67,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_session", ["sessionId"])
-    .index("by_session_version", ["sessionId", "versionNumber"]),
+    .index("by_session_version", ["sessionId", "versionNumber"])
+    .index("by_session_release_version", ["sessionId", "isRelease", "versionNumber"]),
 
   // Activity feed for all session events
   activity: defineTable({
