@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+/*
+ * SessionSync — macOS menu bar panel global styles
+ * Dark theme, compact layout, 400px wide, max 600px tall
+ */
+
+/* Base reset and dark theme */
+:root {
+  --panel-bg: #1c1c1e;
+  --panel-surface: #2c2c2e;
+  --panel-border: #3a3a3c;
+  --text-primary: #f5f5f7;
+  --text-secondary: #98989d;
+  --text-tertiary: #636366;
+  --accent-blue: #0a84ff;
+  --accent-green: #30d158;
+  --accent-yellow: #ffd60a;
+  --accent-orange: #ff9f0a;
+  --accent-red: #ff453a;
+
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  background-color: var(--panel-bg);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Panel dimensions — macOS menu bar popup */
+html,
+body {
+  width: 400px;
+  max-height: 600px;
+  overflow: hidden;
+}
+
+#root {
+  width: 400px;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* No-drag titlebar area — allow interaction */
+body {
+  -webkit-app-region: no-drag;
+}
+
+/* Custom scrollbar for the panel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--panel-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Selection color */
+::selection {
+  background: rgba(10, 132, 255, 0.3);
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Inputs and textareas */
+input,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Disable default button styling */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+/* Status indicator dot utilities */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot-green {
+  background-color: var(--accent-green);
+  box-shadow: 0 0 6px rgba(48, 209, 88, 0.5);
+}
+
+.status-dot-blue {
+  background-color: var(--accent-blue);
+  box-shadow: 0 0 6px rgba(10, 132, 255, 0.5);
+  animation: pulse-blue 2s ease-in-out infinite;
+}
+
+.status-dot-yellow {
+  background-color: var(--accent-yellow);
+  box-shadow: 0 0 6px rgba(255, 214, 10, 0.4);
+}
+
+.status-dot-orange {
+  background-color: var(--accent-orange);
+  box-shadow: 0 0 6px rgba(255, 159, 10, 0.4);
+}
+
+.status-dot-red {
+  background-color: var(--accent-red);
+  box-shadow: 0 0 6px rgba(255, 69, 58, 0.5);
+}
+
+@keyframes pulse-blue {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Progress bar */
+.progress-bar-track {
+  height: 4px;
+  background: var(--panel-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent-blue);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Dropdown menu animation */
+.dropdown-enter {
+  animation: dropdown-in 0.15s ease-out;
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
