@@ -1,0 +1,48 @@
+[package]
+name = "session-sync"
+version = "0.1.0"
+description = "Pro Tools session sync via Cloudflare R2"
+authors = ["SessionSync"]
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "session_sync_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "session-sync"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-autostart = "2"
+tokio = { version = "1", features = ["full"] }
+aws-sdk-s3 = "1"
+aws-config = { version = "1", features = ["behavior-version-latest"] }
+notify = "7"
+notify-debouncer-full = "0.4"
+rusqlite = { version = "0.32", features = ["bundled"] }
+blake3 = { version = "1", features = ["mmap"] }
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+directories = "5"
+glob = "0.3"
+security-framework = "3"
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"] }
+memmap2 = "0.9"
+futures-util = "0.3"
+
+[dev-dependencies]
+tempfile = "3"
