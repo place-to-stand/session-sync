@@ -96,11 +96,11 @@ Sessions use an explicit checkout/release cycle with automatic background sync w
 ## Versioning
 
 - **Auto-push uploads files immediately** for safety (as soon as debounce clears), but **version snapshots are batched every 5 minutes.** This means individual files reach R2 in near-real-time, but a formal "version" (manifest + Convex record) is only created every 5 minutes during active work. This prevents version churn (a 10-hour session produces ~120 versions, not 300+).
-- **Version manifest:** JSON at `_versions/{session}/v{N}/manifest.json` listing every file path + BLAKE3 hash at that point in time (required for rollback to work)
-- **All versions retained** — no pruning. Storage cost is negligible: audio files are deduplicated across versions (write-once, same R2 key), so each version only costs the .ptx snapshot (~50MB). At R2 pricing, 1,000 .ptx snapshots = ~50GB = $0.75/month.
+- **Version manifest:** JSON at `_versions/{session_uuid}/v{N}/manifest.json` listing every file path + BLAKE3 hash at that point in time. The hash is the content-address for the underlying R2 object (e.g. `_objects/{blake3}`), required for rollback to work.
+- **All versions retained** — no pruning. Storage cost is negligible: audio files are stored as **immutable, content-addressed objects** in R2, keyed by BLAKE3 hash, and are **never overwritten.** Any edit (including destructive in-place edits) produces a new object with a new hash/key. Deduplication happens when multiple versions reference the same hash, so each additional version typically only adds the .ptx snapshot (~50MB). At R2 pricing, 1,000 .ptx snapshots = ~50GB = $0.75/month.
 - **Auto-generated summary per version:** "3 new audio files, .ptx modified" (computed from diff)
 - **Optional release note:** shown in the release dialog, pre-filled with auto-summary. Human note is optional, not required.
-- **Rollback:** pull any previous version using its manifest to determine which files to restore. Since all versions are retained, rollback to any point in history is always possible.
+- **Rollback:** pull any previous version using its manifest to determine exactly which immutable object hashes to restore for each file path. Since all manifests reference immutable content-addressed objects and all versions are retained, rollback to any point in history is always possible.
 
 ## Soft Delete
 

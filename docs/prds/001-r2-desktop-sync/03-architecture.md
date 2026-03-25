@@ -38,36 +38,33 @@ If Convex is unreachable:
 
 ## R2 Bucket Organization
 
-Single bucket, prefixed by session:
+Single bucket using **content-addressed storage** — files are stored by BLAKE3 hash so no R2 object is ever overwritten, and historical manifests always reference valid objects:
 
 ```
 session-sync-bucket/
-├── sessions/
-│   ├── {uuid-rivera-album}/
-│   │   ├── Audio Files/Audio 1_01.wav
-│   │   ├── Audio Files/Audio 2_01.wav
-│   │   ├── Bounced Files/Rough Mix.wav
-│   │   ├── Video Files/Reference.mov
-│   │   └── Rivera Album.ptx
-│   ├── {uuid-smith-ep}/
-│   │   └── ...
-│   └── {uuid-garcia-single}/
-│       └── ...
+├── _objects/                             # Content-addressed file store
+│   ├── {blake3-hash-a}.wav              # Audio file (immutable, never overwritten)
+│   ├── {blake3-hash-b}.wav              # Another audio file
+│   ├── {blake3-hash-c}.wav              # Bounced file
+│   ├── {blake3-hash-d}.mov              # Video reference
+│   ├── {blake3-hash-e}.ptx              # Session file at version N
+│   ├── {blake3-hash-f}.ptx              # Session file at version N+1
+│   └── ...                              # Deduplication is automatic: identical content = same hash = one object
 ├── _versions/
 │   ├── {uuid-rivera-album}/
 │   │   ├── v001/
-│   │   │   ├── manifest.json          # File paths + BLAKE3 hashes at this point
-│   │   │   └── Rivera Album.ptx       # Snapshot of session file
-│   │   ├── v002/
-│   │   │   ├── manifest.json
-│   │   │   └── Rivera Album.ptx
+│   │   │   └── manifest.json            # Maps file paths -> BLAKE3 hashes
+│   │   ├── v002/                        #   e.g. "Audio Files/Audio 1_01.wav" -> "{blake3-hash-a}"
+│   │   │   └── manifest.json            # Rollback = read manifest, download objects by hash
 │   │   └── ...
 │   └── ...
 └── _trash/
     ├── {uuid-rivera-album}/
-    │   └── deleted-file.wav
+    │   └── {blake3-hash}.wav            # Soft-deleted objects (auto-purge after 30 days)
     └── ...
 ```
+
+**Content-addressed storage guarantee:** Every file uploaded to R2 is stored at `_objects/{blake3-hash}`. If a file is modified in place (e.g., AudioSuite destructive edit), the new content produces a new hash and is stored as a new object — the old object is never overwritten. This means every historical manifest remains valid and rollback always works.
 
 **Note:** Session prefixes use UUIDs (not human-readable names) to prevent collisions. Human-readable names are stored in Convex only. Renaming a session in SessionSync changes the Convex display name only — the R2 UUID prefix and the .ptx filename are unchanged.
 

@@ -2,6 +2,8 @@
 
 **Dependencies:** Reads `02-sync-model.md`, `06-pro-tools.md`, `07-sync-engine.md`
 
+**Total test cases: ~90** (Phases 1-7 + End-to-End scenarios)
+
 **Update this file after each coding session** — add new test cases as features are built, mark tests as passing/failing.
 
 ---

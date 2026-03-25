@@ -33,7 +33,7 @@ A macOS menu bar utility that manages Pro Tools session checkout, sync, and vers
 
 Pro Tools audio files are **write-once** — new recordings always create new WAV files; existing WAVs are never modified. Only the small `.ptx` session file gets edited. This means audio files can auto-sync safely in the background (zero conflict risk), while the .ptx uses the checkout model for clear ownership.
 
-**Caveat:** AudioSuite destructive editing can modify WAV files in place. The sync engine treats write-once as a *performance optimization* (skip re-hashing unchanged files) but never relies on it for *correctness*. Modified WAVs are detected via hash comparison and handled normally.
+**Caveat:** AudioSuite destructive editing can modify WAV files in place. The sync engine treats write-once as a *performance optimization* (skip re-hashing unchanged files) but never relies on it for *correctness*. Modified WAVs are detected via hash comparison and stored as new content-addressed objects in R2 (keyed by BLAKE3 hash). This means rollback via historical manifests is always valid — no R2 object is ever overwritten.
 
 ## Competitive Landscape
 

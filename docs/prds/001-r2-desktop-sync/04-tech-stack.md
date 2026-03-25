@@ -9,7 +9,7 @@
 | Layer | Choice | Why |
 |-------|--------|-----|
 | Desktop framework | **Tauri 2** (stable) | 30MB idle RAM vs Electron's 300MB. Engineers need CPU/RAM for Pro Tools. |
-| Backend language | **Rust** | File I/O, hashing, and uploads are CPU-bound. Zero GC pauses. |
+| Sync engine language | **Rust** | File I/O, hashing, and uploads are CPU-bound. Zero GC pauses. |
 | Control plane | **Convex** | Real-time subscriptions, credential broker, user/machine identity. |
 | File storage | **Cloudflare R2** | $0 egress, S3-compatible, $0.015/GB/month. |
 | File watching | `notify` v7 + `notify-debouncer-full` | Cross-platform, rename detection, configurable debounce. |

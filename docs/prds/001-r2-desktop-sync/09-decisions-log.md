@@ -39,10 +39,10 @@ Every architectural decision made during the design process, with rationale.
 | Timeline | 60-90 days (extended from 33) | Accounts for Rust learning curve and audit findings. |
 | Pull behavior | Download only, no auto-open PT | Engineer opens Pro Tools themselves. |
 | Pull vs Check Out | Separate actions | Pull downloads files (background). Check Out acquires lock (requires local copy). Can't check out until fully downloaded. |
-| Version retention | Keep all versions, no pruning | Storage cost negligible (audio deduplicated, only .ptx snapshots add cost). Rollback to any point in history always possible. |
+| Version retention | Keep all versions, no pruning | Storage cost negligible (audio stored as immutable content-addressed objects, deduplicated by BLAKE3 hash — only .ptx snapshots add cost). Rollback to any point in history always possible because no R2 object is ever overwritten. |
 | Version snapshot frequency | Batch every 5 minutes | Files upload immediately for safety. Manifest + Convex version record created every 5 min. Prevents version churn (~120/day vs 300+). |
 | Rust <-> Convex | HTTP API via reqwest | No Convex Rust SDK exists. HTTP POST to mutation/action/query endpoints. Batch presigned URL requests for multipart. |
-| Invite mechanism | Signed token via Convex HTTP action | Single-use invite link, 7-day expiry. Invited engineer never sees R2 credentials. |
+| Invite mechanism | Signed token via Convex HTTP action | Strictly single-use invite link with server-side enforcement (tracks `redeemedAt`, `revokedAt`), 7-day expiry. Invited engineer never sees R2 credentials. |
 | Request notifications | Convex subscription -> Tauri event -> macOS notification | Advisory only, no automatic action. Stored in activity feed if recipient offline. |
 | Session rename | Display name only (Convex) | R2 UUID prefix and .ptx filename unchanged. Prevents collisions and broken references. |
 | Source of truth | Convex = state + metadata, R2 = files + manifests, SQLite = local cache | Three-layer hierarchy. Each layer authoritative for its domain. |
